@@ -8,13 +8,19 @@ import argparse
 import matplotlib.pyplot as plt
 import cv2
 
-def cv2_plt(img):
+def im_plt(img):
   """
     Open image and print it on screen
   """
   plt.ion()
   plt.figure()
   plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+def im_block():
+  """
+  Blocks thread until windows are closed
+  """
+  plt.show(block=True)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser("Takes input image and plots it")
@@ -28,8 +34,7 @@ if __name__ == "__main__":
   #plot the image
   print("Opening image \'%s\'"%FLAGS.img)
   img = cv2.imread(FLAGS.img)
-  cv2_plt(img)
-  # cv2_plt(img) #Shows that we can open different figures and wait 4 all
-  plt.show(block=True)
-  
+  im_plt(img)
+  # im_plt(img) #Shows that we can open different figures and wait 4 all
+  im_block()
 

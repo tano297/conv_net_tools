@@ -36,6 +36,8 @@ import random
 from shutil import rmtree as sh_rmtree
 from shutil import copy as sh_copy
 import math
+import show_img as shim
+import numpy as np
 
 #opencv is needed for the image transformations
 import cv2
@@ -44,7 +46,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def apply_rotations(images,n_rot,cw_limit,ccw_limit):
+def apply_rotations(images,n_rot,ccw_limit,cw_limit):
   """
   Rotates every image in the list "images" n_rot times, between cw_limit 
   (clockwise limit) and ccw_limit (counterclockwise limit). The limits are 
@@ -81,3 +83,122 @@ def apply_rotations(images,n_rot,cw_limit,ccw_limit):
       rotated_images.append(rot_img)
 
   return rotated_images
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser("Apply augmentations to data. See source")
+  parser.add_argument(
+    '--in_dir',
+    type=str,
+    help='Path of raw dataset to augment. No default'
+  )
+  parser.add_argument(
+    '--in_img',
+    type=str,
+    help='Path of raw image to augment. No default'
+  )
+  parser.add_argument(
+    '--out_dir',
+    type=str,
+    default='/tmp/out_dir',
+    help='Path of augmented output dataset. Defaults to \'%(default)s\''
+  )
+  parser.add_argument(
+    '--rots',
+    nargs='*',
+    type=float,
+    help='List that contains [n_rots,ccw_limit,cw_limit]. Rotates data n_rots '+
+    'times, with ccw_limit as counterclockwise limit, and cw_limit as '
+    'clockwise limit. Angles limited to 180 degrees, and n_rots to 36000'
+    'Defaults to \'%(default)s\''
+  )
+  parser.add_argument(
+    '--show',
+    dest='show',
+    action='store_true',
+    help='Show all augmented data on screen. Defaults to False'
+  )
+  parser.set_defaults(show=False)
+
+  #parse args
+  FLAGS, unparsed = parser.parse_known_args()
+
+  # Sanity checks
+  # Input directory needs OR input image needs to be provided. Both shouldn't
+  # work either. Done with dirty implementation of an xnor gate
+  if not (bool(FLAGS.in_dir) != bool(FLAGS.in_img)):
+    print("Dataset directory OR single image path needs to be provided. "+
+          "Exiting")
+    quit()
+
+  # It also needs to exist
+  if FLAGS.in_dir and (not os.path.exists(FLAGS.in_dir)):
+    print("Input directory needs to exist, Einstein :) Exiting")
+    quit()
+
+  if FLAGS.in_img and (not os.path.exists(FLAGS.in_img)):
+    print("Input image needs to exist, Einstein :) Exiting")
+    quit()
+
+  # rotations sanity check: limit angles to 180 and n_rots to 36000)
+  # this is chosen somewhat randomly, I cannot imagine somebody willingly
+  # expanding an image with more resolution than 0.01 degrees, so it is probably
+  # a coding error and it will stupidly all the memory.
+  if FLAGS.rots and (len(FLAGS.rots) != 3):
+    print("Wrong usage of rotation parameters. Check again. Exiting")
+    quit()
+
+  n_rots = 0
+  if FLAGS.rots:
+    n_rots = int(FLAGS.rots[0])
+    ccw_limit = FLAGS.rots[1]
+    cw_limit = FLAGS.rots[2]
+    if n_rots > 36000:
+      print("Too many rotations. Exiting")
+      quit()
+    if cw_limit > 180 or ccw_limit > 180:
+      print("Rotations off boundaries. Exiting")
+      quit()
+
+  # parameter show.   
+  print("----------------------------Parameters-------------------------------")
+  print("in_dir: ",FLAGS.in_dir)
+  print("in_im: ",FLAGS.in_dir)
+  print("out_dir: ",FLAGS.out_dir)
+  print("rots: ",FLAGS.rots)
+  print("show: ",FLAGS.show)
+  print("---------------------------------------------------------------------")
+
+  # get all cv2 images from dir or input image
+  if FLAGS.in_dir:
+    files = [ f for f in listdir(FLAGS.in_dir) if isfile(join(FLAGS.in_dir,f))]
+    images = [cv2.imread(join(FLAGS.in_dir,img), cv2.IMREAD_UNCHANGED) for img in files]
+  else:
+    images = [cv2.imread(join(FLAGS.in_img), cv2.IMREAD_UNCHANGED)]
+
+  print("len images: ", len(images))
+  print images
+
+  # apply pertinent transformations
+  transformed_list = []
+
+  #rots
+  if n_rots:
+    print("Rotating images %d times, with ccw_limit:%.2f, and cw_limit:%.2f"
+        % (n_rots, ccw_limit, cw_limit))
+    rot_list = apply_rotations(images,n_rots,ccw_limit,cw_limit)
+    transformed_list.extend(rot_list)
+    print("rot list type",type(rot_list))
+    print("rot list length: ",len(rot_list))
+    print("tf list length: ",len(transformed_list))
+    print("Done!")
+  #if FLAGS.lalalala... Other transformations
+
+  # @TODO: Save to disk in out_dir!!!!!!!!!!!!!!!
+
+  # if asked, show the results
+  if FLAGS.show:
+    for img in transformed_list:
+      shim.im_plt(img)
+    shim.im_block()
+
+
