@@ -24,6 +24,19 @@ def randomize(directory):
   print("Shuffled %d file names from dir \'%s\'" % (len(files),directory))
   return directory,files
 
+def copy_files(in_dir,files,sample_type,out_dir):
+  """
+  Copy selected files from in_dir to 'out_dir/sample_type'
+  """
+  print("Moving shuffled %s data to dir \'%s\'" 
+        % (sample_type,join(out_dir,sample_type)))
+  for file_name in files:
+    full_file_name = os.path.join(in_dir, file_name)
+    if (os.path.isfile(full_file_name)):
+        sh_copy(full_file_name, join(out_dir,sample_type))
+  print("Moved %d shuffled samples to dir \'%s\'" 
+    % (len(files),join(out_dir,sample_type)))
+
 def divide(in_dir,files,out_dir,train_split,valid_split,test_split):
   """
   Puts the randomized data in the 
@@ -51,50 +64,27 @@ def divide(in_dir,files,out_dir,train_split,valid_split,test_split):
   #get the sets according to split, and copy to it's output dir
   
   # train data
-  print("Moving shuffled train data to dir \'%s\'" % join(out_dir,"train"))
   train_num = int(math.floor(files_num * float(train_split) / 100.0))
   train_set = files[0:train_num]
-  for file_name in train_set:
-    full_file_name = os.path.join(in_dir, file_name)
-    if (os.path.isfile(full_file_name)):
-        sh_copy(full_file_name, join(out_dir,"train"))
-  print("Moved %d/%d shuffled samples to dir \'%s\'" 
-    % (train_num,files_num,join(out_dir,"train")))
+  copy_files(in_dir,train_set,"train",out_dir)
 
   # validation data
-  print("Moving shuffled validation data to dir \'%s\'" % join(out_dir,"valid"))
   valid_num = int(math.floor(files_num * float(valid_split) / 100.0))
   valid_set = files[train_num:train_num+valid_num]
-  for file_name in valid_set:
-    full_file_name = os.path.join(in_dir, file_name)
-    if (os.path.isfile(full_file_name)):
-        sh_copy(full_file_name, join(out_dir,"valid"))
-  print("Moved %d/%d shuffled samples to dir \'%s\'" 
-        % (valid_num,files_num,join(out_dir,"valid")))
+  copy_files(in_dir,valid_set,"valid",out_dir)
 
 
   # test data
-  print("Moving shuffled test data to dir \'%s\'" % join(out_dir,"test"))
   test_num = int(math.floor(files_num * float(test_split) / 100.0))
   test_set = files[train_num+valid_num:train_num+valid_num+test_num]
-  for file_name in test_set:
-    full_file_name = os.path.join(in_dir, file_name)
-    if (os.path.isfile(full_file_name)):
-        sh_copy(full_file_name, join(out_dir,"test"))
-  print("Moved %d/%d shuffled samples to dir \'%s\'" 
-        % (test_num,files_num,join(out_dir,"test")))
-
+  copy_files(in_dir,test_set,"test",out_dir)
+  
   # copy orphan samples from rest to training data (free data, wohoo!)
   if(train_num+valid_num+test_num < files_num):
     orphan_num = files_num - train_num - valid_num - test_num
-    print("Copying %d orphans to training data (rounding)"%orphan_num)
+    print("Relocating %d orphans (remainder from flooring)"%orphan_num)
     orphans = files[train_num+valid_num+test_num:]
-    for file_name in orphans:
-      full_file_name = os.path.join(in_dir, file_name)
-      if (os.path.isfile(full_file_name)):
-        sh_copy(full_file_name, join(out_dir,"train"))
-    print("Moved %d/%d shuffled samples to dir \'%s\'" 
-          % (orphan_num,files_num,join(out_dir,"train")))
+    copy_files(in_dir,orphans,"train",out_dir)
 
 
   return out_dir
