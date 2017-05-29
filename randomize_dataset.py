@@ -1,4 +1,31 @@
 #!/usr/bin/python2.7
+'''
+This code takes in a folder with samples (with it's labels, since I usually 
+put them in the file name to be extracted later easily) and it applies a 
+shuffling and a split into different folders, to be used by learning algorithms
+later. The output folder hierarchy is the following:
+  * "path_to_output_dir"/train
+  * "path_to_output_dir"/valid
+  * "path_to_output_dir"/test
+
+The "train" folder contains the training data, and it is the one that can be 
+used to train the algorithm and also augmented for that purpose. 
+
+The "valid" folder is the one with the validation data, that we can use to 
+select hyper-parameters, by analyzing the quality of the generalization for this
+data, which is not seen during training. The error in this validation set can 
+also be used for early stopping, so as to prevent overfitting :)
+
+The "test" folder is the one to use after training is done, for generalization 
+quality test of our algorithm. It is important to NOT use the data in this 
+folder during the algorithm training/tunning, to avoid any possible feedback 
+into the system that can hinder our generalization quality assessment. It
+is hard to see why this is important, because the validation data is not being
+fed into the training of the algorithm, but the scientist/engineer is seeing
+the error and acting upon the model, which generates a "human" feedback, that 
+can cause use to underestimate the generalization error. Basically, forget 
+about it until your algorithm is done and ready for test. 
+'''
 
 import argparse
 import os
