@@ -14,7 +14,6 @@ def cv2_plt(img):
   """
   plt.ion()
   plt.figure()
-  img = cv2.imread(img)
   plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 if __name__ == "__main__":
@@ -28,8 +27,9 @@ if __name__ == "__main__":
 
   #plot the image
   print("Opening image \'%s\'"%FLAGS.img)
-  cv2_plt(FLAGS.img)
-  # cv2_plt(FLAGS.img) #Shows that we can open different figures and wait 4 all
+  img = cv2.imread(FLAGS.img)
+  cv2_plt(img)
+  # cv2_plt(img) #Shows that we can open different figures and wait 4 all
   plt.show(block=True)
   
 
