@@ -120,7 +120,7 @@ if __name__ == "__main__":
   parser.add_argument(
     '--split',
     nargs='*',
-    type=int,
+    type=float,
     default=[70,15,15],
     help='Split of the dataset between training data, validation data, and '+
     'test data (in %% points). Can be a list of 3 summing to 100, or a list '+
@@ -161,13 +161,15 @@ if __name__ == "__main__":
   print("---------------------------------------------------------------------")
 
   # randomize the files
-  print("\n\n- Randomizing data in dir \'%s\'" % FLAGS.in_dir)
-  in_dir,randfiles = randomize(FLAGS.in_dir)
+  abs_in_dir_path = os.path.abspath(FLAGS.in_dir)
+  print("\n\n- Randomizing data in dir \'%s\'" % abs_in_dir_path)
+  in_dir,randfiles = randomize(abs_in_dir_path)
   print("Done!")
 
   # put them in their folders
-  print("\n\n- Putting data in dir \'%s\'" % FLAGS.out_dir)
-  out_dir = divide(FLAGS.in_dir,randfiles,FLAGS.out_dir,
+  abs_out_dir_path = os.path.abspath(FLAGS.out_dir)
+  print("\n\n- Putting data in dir \'%s\'" % abs_out_dir_path)
+  out_dir = divide(abs_in_dir_path,randfiles,abs_out_dir_path,
                    FLAGS.split[0],FLAGS.split[1],FLAGS.split[2])
   print("Done!")
 
