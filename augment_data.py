@@ -216,8 +216,7 @@ def apply_vert_shear(images,n_shear,max_shear,crop_center=True):
 def apply_horiz_flip(images):
   """
   Applies a horizontal flip to every image in the list "images" 
-  Returns a list with all the flipped samples. Size will be n_shear+1, because
-  we also want the original sample to be included. 
+  Returns a list with all the original and flipped samples.
   """
   # if we only have 1 image, transform into a list to work with same script
   if type(images) is not list:
@@ -237,8 +236,7 @@ def apply_horiz_flip(images):
 def apply_vert_flip(images):
   """
   Applies a vertical flip to every image in the list "images" 
-  Returns a list with all the flipped samples. Size will be n_shear+1, because
-  we also want the original sample to be included. 
+  Returns a list with all the original and flipped samples. 
   """
   # if we only have 1 image, transform into a list to work with same script
   if type(images) is not list:
@@ -254,6 +252,43 @@ def apply_vert_flip(images):
     flipped_images.append(cv2.flip(img,0))
 
   return flipped_images
+
+def apply_gaussian_noise(images,mean,std):
+  """
+  Applies gaussian noise to every image in the list "images" with the desired
+
+  Returns a list with all the original and noisy images. 
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # container for sheared images
+  noisy_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #get rows and cols apply noise to
+    rows,cols,depth = img.shape
+    
+    # append original image 
+    noisy_images.append(img)
+
+    #fill in the per-channel mean and std
+    m = np.full((1, depth),mean)
+    s = np.full((1, depth),std)
+
+    # add noise to image
+    # noisy_img = img.copy()
+    noisy_img = np.zeros((rows,cols,depth),dtype=np.uint8)
+    noisy_img = cv2.randn(noisy_img,m,s)
+    shim.im_plt(noisy_img)
+    noisy_img = img + noisy_img
+
+    #append noisy image to container
+    noisy_images.append(noisy_img)
+
+  return noisy_images
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser("Apply augmentations to data. See source")
@@ -298,12 +333,11 @@ if __name__ == "__main__":
     'The limit is defined as a portion of the original image to move -> {0;1}'
   )
   parser.add_argument(
-    '--show',
-    dest='show',
-    action='store_true',
-    help='Show all augmented data on screen. Defaults to False'
+    '--gaussian_noise',
+    nargs='*',
+    type=float,
+    help='List that contains [mean,std] for the Gaussian noise applied'
   )
-  parser.set_defaults(show=False)
   parser.add_argument(
     '--vert_flip',
     dest='vert_flip',
@@ -318,6 +352,15 @@ if __name__ == "__main__":
     help='Apply horizontal flip. Defaults to False'
   )
   parser.set_defaults(horiz_flip=False)
+
+  #show data on screen?
+  parser.add_argument(
+    '--show',
+    dest='show',
+    action='store_true',
+    help='Show all augmented data on screen. Defaults to False'
+  )
+  parser.set_defaults(show=False)
 
   #parse args
   FLAGS, unparsed = parser.parse_known_args()
@@ -394,6 +437,11 @@ if __name__ == "__main__":
       print("Vertical shear size off boundaries. Exiting")
       quit()
 
+  # Gaussian noise sanity check
+  if FLAGS.gaussian_noise and (len(FLAGS.gaussian_noise) != 2):
+    print("Wrong usage of gaussian noise parameters. Check again. Exiting")
+    quit()
+
   # parameter show.   
   print("----------------------------Parameters-------------------------------")
   print("in_dir: ",FLAGS.in_dir)
@@ -402,6 +450,9 @@ if __name__ == "__main__":
   print("rots: ",FLAGS.rots)
   print("horiz_shear: ",FLAGS.horiz_shear)
   print("vert_shear: ",FLAGS.vert_shear)
+  print("gaussian_noise",FLAGS.gaussian_noise)
+  print("vert_flip",FLAGS.vert_flip)
+  print("horiz_flip",FLAGS.horiz_flip)
   print("show: ",FLAGS.show)
   print("---------------------------------------------------------------------")
 
@@ -443,6 +494,13 @@ if __name__ == "__main__":
     print("Flipping images vertically")
     vert_flip_list = apply_vert_flip(images)
     transformed_list.extend(vert_flip_list)
+    print("Done!")
+  if FLAGS.gaussian_noise:
+    print("Applying gaussian noise with mean:%.2f and std:%.2f"
+          % (FLAGS.gaussian_noise[0],FLAGS.gaussian_noise[1]))
+    noisy_images = apply_gaussian_noise(images,FLAGS.gaussian_noise[0],
+                                        FLAGS.gaussian_noise[1])
+    transformed_list.extend(noisy_images)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
 
