@@ -91,17 +91,17 @@ def apply_rotations(images,n_rot,ccw_limit,cw_limit):
 
   return rotated_images
 
-def apply_shear(images,n_shear,max_shear_x,max_shear_y,crop_center=True):
+def apply_horiz_shear(images,n_shear,max_shear,crop_center=True):
   """
-  Applies a shear transform to every image in the list "images" n_shear times,
-  with the max shear passed in the max_shear_x and max_shear_y arguments. By 
+  Applies a horizontal shear transform to every image in the list "images" 
+  n_shear times, with the max shear passed in the max_shear argument. By 
   default, we crop the center of the images so that all images have the same 
   shape, but this can be changed with the arg crop_center set to False.
 
   Returns a list with all the shear samples. Size will be n_shear+1, because
   we also want the original sample to be included. 
 
-  Example: images=[img],n_shear=2, max_shear_x = 0.5, max_shear_y=0
+  Example: images=[img],n_shear=2, max_shear=0.5
   Returns: [img1=img,
            img2=img with shear of 0.25 in x,
            img3=img with shear of 0.5 in x]
@@ -111,8 +111,7 @@ def apply_shear(images,n_shear,max_shear_x,max_shear_y,crop_center=True):
     images = [images]
 
   # calculate the shear steps
-  x_step = float(max_shear_x) / float(n_shear) 
-  y_step = float(max_shear_x) / float(n_shear) 
+  step_rel = max_shear / float(n_shear) #relative to image size
 
   # container for sheared images
   sheared_images = []
@@ -121,15 +120,94 @@ def apply_shear(images,n_shear,max_shear_x,max_shear_y,crop_center=True):
   for img in images:
     #get rows and cols to shear
     rows,cols,depth = img.shape
-    #shear the amount of times we want them sheared
+    step_abs = step_rel * cols #absolute to image size
+
+    #shear the amount of times we want
     for i in xrange(0, n_shear+1):
       #create shear matrix by mapping points
-      pts1 = np.float32([[0,0],[rows,0],[0,cols]])
-      pts2 = np.float32([[0,0],[rows+x_step*i,0],[0,cols+y_step*i]])
-      M = cv2.getAffineTransform(pts1,pts2)
+      size_inc = abs(int(step_abs*i)) #increases in size in each dim of the img
 
+      #shear is different if is positive or negative
+      if int(step_abs*i) > 0:
+        pts1 = np.float32([[0,0],[0,rows],[cols,rows]])
+        pts2 = np.float32([[0,0],[size_inc,rows],[cols+size_inc,rows]])
+        M = cv2.getAffineTransform(pts1,pts2)
+        shear_img = cv2.warpAffine(img,M,(cols+size_inc,rows),flags=cv2.INTER_CUBIC)
+      elif int(step_abs*i) < 0:
+        pts1 = np.float32([[0,rows],[0,0],[cols,rows]])
+        pts2 = np.float32([[0,rows],[size_inc,0],[cols,rows]])
+        M = cv2.getAffineTransform(pts1,pts2)
+        shear_img = cv2.warpAffine(img,M,(cols+size_inc,rows),flags=cv2.INTER_CUBIC)
+      else:
+        shear_img = img
       #shear using the matrix (and bicubic interpolation)
-      shear_img = cv2.warpAffine(img,M,(cols,rows),flags=cv2.INTER_CUBIC)
+      
+      if crop_center:
+        row_start = (shear_img.shape[0]/2) - (rows/2)
+        col_start = (shear_img.shape[1]/2) - (cols/2)
+        shear_img = shear_img[row_start:row_start+rows,col_start:col_start+cols]
+
+      #append to sheared images container
+      sheared_images.append(shear_img)
+
+  return sheared_images
+
+def apply_vert_shear(images,n_shear,max_shear,crop_center=True):
+  """
+  Applies a vertical shear transform to every image in the list "images" 
+  n_shear times, with the max shear passed in the max_shear argument. By 
+  default, we crop the center of the images so that all images have the same 
+  shape, but this can be changed with the arg crop_center set to False.
+
+  Returns a list with all the shear samples. Size will be n_shear+1, because
+  we also want the original sample to be included. 
+
+  Example: images=[img],n_shear=2, max_shear=0.5
+  Returns: [img1=img,
+           img2=img with shear of 0.25 in y,
+           img3=img with shear of 0.5 in y]
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # calculate the shear steps
+  step_rel = max_shear / float(n_shear) #relative to image size
+
+  # container for sheared images
+  sheared_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #get rows and cols to shear
+    rows,cols,depth = img.shape
+    step_abs = step_rel * rows #absolute to image size
+
+    #shear the amount of times we want
+    for i in xrange(0, n_shear+1):
+      #create shear matrix by mapping points
+      size_inc = abs(int(step_abs*i)) #increases in size in each dim of the img
+
+      #shear is different if is positive or negative
+      if int(step_abs*i) > 0:
+        pts1 = np.float32([[0,0],[cols,0],[cols,rows]])
+        pts2 = np.float32([[0,0],[cols,size_inc],[cols,rows+size_inc]])
+        M = cv2.getAffineTransform(pts1,pts2)
+        shear_img = cv2.warpAffine(img,M,(cols,rows+size_inc),flags=cv2.INTER_CUBIC)
+      elif int(step_abs*i) < 0:
+        pts1 = np.float32([[0,0],[cols,0],[0,rows]])
+        pts2 = np.float32([[0,size_inc],[cols,0],[0,rows+size_inc]])
+        M = cv2.getAffineTransform(pts1,pts2)
+        shear_img = cv2.warpAffine(img,M,(cols,rows+size_inc),flags=cv2.INTER_CUBIC)
+      else:
+        shear_img = img
+      #shear using the matrix (and bicubic interpolation)
+      
+      if crop_center:
+        row_start = (shear_img.shape[0]/2) - (rows/2)
+        col_start = (shear_img.shape[1]/2) - (cols/2)
+        shear_img = shear_img[row_start:row_start+rows,col_start:col_start+cols]
+
       #append to sheared images container
       sheared_images.append(shear_img)
 
@@ -162,13 +240,20 @@ if __name__ == "__main__":
     'clockwise limit. Angles limited to 180 degrees, and n_rots to 36000'
   )
   parser.add_argument(
-    '--shear',
+    '--horiz_shear',
     nargs='*',
     type=float,
-    help='List that contains [n_shear,max_shear_x,max_shear_y]. '+
-    'Shears data n_shear times, with max_shear_x and max_shear_y as limits. '+
-    'The limits are defined as a portion of the original image to move in '+
-    'each direction -> {0;1}'
+    help='List that contains [n_shear,max_shear]. '+
+    'Shears data n_shear times horizontally, with max_shear as limit. '+
+    'The limit is defined as a portion of the original image to move -> {0;1}'
+  )
+  parser.add_argument(
+    '--vert_shear',
+    nargs='*',
+    type=float,
+    help='List that contains [n_shear,max_shear]. '+
+    'Shears data n_shear times vertically, with max_shear as limit. '+
+    'The limit is defined as a portion of the original image to move -> {0;1}'
   )
   parser.add_argument(
     '--show',
@@ -218,13 +303,49 @@ if __name__ == "__main__":
       print("Rotations off boundaries. Exiting")
       quit()
 
+  # horizontal and vertical shearing sanity check. Limiting to 100 shears, 
+  # and 10 times the image size in maximum shear. More than this is probably a 
+  # mistake (image looks like mom's spaghetti)
+  
+  #horizontal
+  if FLAGS.horiz_shear and (len(FLAGS.horiz_shear) != 2):
+    print("Wrong usage of horizontal shear parameters. Check again. Exiting")
+    quit()
+
+  n_horiz_shear = 0
+  if FLAGS.horiz_shear:
+    n_horiz_shear = int(FLAGS.horiz_shear[0])
+    max_horiz_shear = FLAGS.horiz_shear[1]
+    if n_horiz_shear > 100:
+      print("Too many horizontal shears. Exiting")
+      quit()
+    if abs(max_horiz_shear) > 10:
+      print("Horizontal shear size off boundaries. Exiting")
+      quit()
+
+  if FLAGS.vert_shear and (len(FLAGS.vert_shear) != 2):
+    print("Wrong usage of vertical shear parameters. Check again. Exiting")
+    quit()
+
+  n_vert_shear = 0
+  if FLAGS.vert_shear:
+    n_vert_shear = int(FLAGS.vert_shear[0])
+    max_vert_shear = FLAGS.vert_shear[1]
+    if n_vert_shear > 100:
+      print("Too many vertical shears. Exiting")
+      quit()
+    if abs(max_vert_shear) > 10:
+      print("Vertical shear size off boundaries. Exiting")
+      quit()
+
   # parameter show.   
   print("----------------------------Parameters-------------------------------")
   print("in_dir: ",FLAGS.in_dir)
   print("in_im: ",FLAGS.in_dir)
   print("out_dir: ",FLAGS.out_dir)
   print("rots: ",FLAGS.rots)
-  print("shear: ",FLAGS.shear)
+  print("horiz_shear: ",FLAGS.horiz_shear)
+  print("vert_shear: ",FLAGS.vert_shear)
   print("show: ",FLAGS.show)
   print("---------------------------------------------------------------------")
 
@@ -244,6 +365,18 @@ if __name__ == "__main__":
         % (n_rots, ccw_limit, cw_limit))
     rot_list = apply_rotations(images,n_rots,ccw_limit,cw_limit)
     transformed_list.extend(rot_list)
+    print("Done!")
+  if n_horiz_shear:
+    print("Shearing images horizontally %d times, with max_shear:%.2f" 
+        % (n_horiz_shear, max_horiz_shear))
+    horiz_shear_list = apply_horiz_shear(images,n_horiz_shear,max_horiz_shear)
+    transformed_list.extend(horiz_shear_list)
+    print("Done!")
+  if n_vert_shear:
+    print("Shearing images vertically %d times, with max_shear:%.2f" 
+        % (n_vert_shear, max_vert_shear))
+    vert_shear_list = apply_vert_shear(images,n_vert_shear,max_vert_shear)
+    transformed_list.extend(vert_shear_list)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
 
