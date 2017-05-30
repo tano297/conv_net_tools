@@ -213,6 +213,48 @@ def apply_vert_shear(images,n_shear,max_shear,crop_center=True):
 
   return sheared_images
 
+def apply_horiz_flip(images):
+  """
+  Applies a horizontal flip to every image in the list "images" 
+  Returns a list with all the flipped samples. Size will be n_shear+1, because
+  we also want the original sample to be included. 
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # container for sheared images
+  flipped_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #append original and flipped images to container
+    flipped_images.append(img)
+    flipped_images.append(cv2.flip(img,1))
+ 
+  return flipped_images
+
+def apply_vert_flip(images):
+  """
+  Applies a vertical flip to every image in the list "images" 
+  Returns a list with all the flipped samples. Size will be n_shear+1, because
+  we also want the original sample to be included. 
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # container for sheared images
+  flipped_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #append original and flipped images to container
+    flipped_images.append(img)
+    flipped_images.append(cv2.flip(img,0))
+
+  return flipped_images
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser("Apply augmentations to data. See source")
   parser.add_argument(
@@ -262,6 +304,20 @@ if __name__ == "__main__":
     help='Show all augmented data on screen. Defaults to False'
   )
   parser.set_defaults(show=False)
+  parser.add_argument(
+    '--vert_flip',
+    dest='vert_flip',
+    action='store_true',
+    help='Apply vertical flip. Defaults to False'
+  )
+  parser.set_defaults(vert_flip=False)
+  parser.add_argument(
+    '--horiz_flip',
+    dest='horiz_flip',
+    action='store_true',
+    help='Apply horizontal flip. Defaults to False'
+  )
+  parser.set_defaults(horiz_flip=False)
 
   #parse args
   FLAGS, unparsed = parser.parse_known_args()
@@ -377,6 +433,16 @@ if __name__ == "__main__":
         % (n_vert_shear, max_vert_shear))
     vert_shear_list = apply_vert_shear(images,n_vert_shear,max_vert_shear)
     transformed_list.extend(vert_shear_list)
+    print("Done!")
+  if FLAGS.horiz_flip:
+    print("Flipping images horizontally")
+    horiz_flip_list = apply_horiz_flip(images)
+    transformed_list.extend(horiz_flip_list)
+    print("Done!")
+  if FLAGS.vert_flip:
+    print("Flipping images vertically")
+    vert_flip_list = apply_vert_flip(images)
+    transformed_list.extend(vert_flip_list)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
 
