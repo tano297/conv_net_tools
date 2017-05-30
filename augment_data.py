@@ -290,6 +290,99 @@ def apply_gaussian_noise(images,mean,std):
 
   return noisy_images
 
+def apply_gaussian_noise(images,mean,std):
+  """
+  Applies gaussian noise to every image in the list "images" with the desired
+
+  Returns a list with all the original and noisy images. 
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # container for sheared images
+  noisy_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #get rows and cols apply noise to
+    rows,cols,depth = img.shape
+    
+    # append original image 
+    noisy_images.append(img)
+
+    #fill in the per-channel mean and std
+    m = np.full((1, depth),mean)
+    s = np.full((1, depth),std)
+
+    # add noise to image
+    # noisy_img = img.copy()
+    noisy_img = np.zeros((rows,cols,depth),dtype=np.uint8)
+    noisy_img = cv2.randn(noisy_img,m,s)
+    shim.im_plt(noisy_img)
+    noisy_img = img + noisy_img
+
+    #append noisy image to container
+    noisy_images.append(noisy_img)
+
+  return noisy_images
+
+def apply_occlusions(images,grid_x,grid_y,selection):
+  """
+  Applies a grid to each image and removes a block from selection (zeroing it).
+  Returns a list with all the original and occluded images. 
+
+  Example: grid_x=3,grid_y=3,selection=[1,3]. 
+
+  This divides the image in 9, and returns the original image with the 1st 
+  and 3rd quadrant occluded (in separate images).
+
+  Grid for this case: 
+  -------------------------
+  |   0   |   1-< |   2   |
+  -------------------------
+  |   3<- |   4   |   5   |
+  -------------------------
+  |   6   |   7   |   8   |
+  -------------------------
+
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # container for sheared images
+  occluded_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    # append original image 
+    occluded_images.append(img)
+
+    #get rows and cols
+    rows,cols,depth = img.shape
+    
+    #number of rows and cols in subsections
+    x_subsec = cols / 3
+    y_subsec = rows / 3
+
+    for idx in selection:
+      # select x_box and y_box
+      x_box = idx/grid_x
+      y_box = idx%grid_y
+      
+      #generate the mask
+      mask = np.full((rows,cols),255).astype(np.uint8)
+      mask[x_box*x_subsec:(x_box+1)*x_subsec,y_box*y_subsec:(y_box+1)*y_subsec] = 0
+
+      # occlude image
+      occ_img = cv2.bitwise_and(img,img,mask=mask)
+
+      #append occluded image to container
+      occluded_images.append(occ_img)
+
+  return occluded_images
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser("Apply augmentations to data. See source")
   parser.add_argument(
