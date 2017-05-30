@@ -319,7 +319,6 @@ def apply_gaussian_noise(images,mean,std):
     # noisy_img = img.copy()
     noisy_img = np.zeros((rows,cols,depth),dtype=np.uint8)
     noisy_img = cv2.randn(noisy_img,m,s)
-    shim.im_plt(noisy_img)
     noisy_img = img + noisy_img
 
     #append noisy image to container
@@ -363,17 +362,17 @@ def apply_occlusions(images,grid_x,grid_y,selection):
     rows,cols,depth = img.shape
     
     #number of rows and cols in subsections
-    x_subsec = cols / 3
-    y_subsec = rows / 3
+    x_subsec = cols / grid_x
+    y_subsec = rows / grid_y
 
     for idx in selection:
       # select x_box and y_box
-      x_box = idx/grid_x
-      y_box = idx%grid_y
+      x_box = idx%grid_x
+      y_box = idx/grid_x
       
       #generate the mask
       mask = np.full((rows,cols),255).astype(np.uint8)
-      mask[x_box*x_subsec:(x_box+1)*x_subsec,y_box*y_subsec:(y_box+1)*y_subsec] = 0
+      mask[y_box*y_subsec:(y_box+1)*y_subsec,x_box*x_subsec:(x_box+1)*x_subsec] = 0
 
       # occlude image
       occ_img = cv2.bitwise_and(img,img,mask=mask)
@@ -430,6 +429,15 @@ if __name__ == "__main__":
     nargs='*',
     type=float,
     help='List that contains [mean,std] for the Gaussian noise applied'
+  )
+  parser.add_argument(
+    '--occlude',
+    nargs='*',
+    type=int,
+    help='List that contains [grid_x,grid_y,selection] for the occlusions '+ 
+    'applied. Grid_x and Grid_y set the x and y amounts for the grid, and '+
+    'selection is a list that contains which section\'s occlusions we want'+
+    'to apply. See source code for explanation.'
   )
   parser.add_argument(
     '--vert_flip',
@@ -535,6 +543,25 @@ if __name__ == "__main__":
     print("Wrong usage of gaussian noise parameters. Check again. Exiting")
     quit()
 
+  # occlusions sanity check
+  if FLAGS.occlude:
+    if(len(FLAGS.occlude) < 3):
+      print("Wrong usage of occlusion parameters. Check again. Exiting")
+      quit()
+    
+    if(FLAGS.occlude[0] < 0 or FLAGS.occlude[1] < 0):
+      print("Wrong usage of occlusion grid parameters. Check again. Exiting")
+      quit()
+    else:
+      x_grid=FLAGS.occlude[0]
+      y_grid=FLAGS.occlude[1]
+
+    for i in FLAGS.occlude[2:]:
+      if(i<0 or i>=x_grid*y_grid):
+        print("Wrong usage of occlusion selection. Off boundaries! Exiting")
+        quit()
+    occlusion_selection = FLAGS.occlude[2:]
+
   # parameter show.   
   print("----------------------------Parameters-------------------------------")
   print("in_dir: ",FLAGS.in_dir)
@@ -544,6 +571,7 @@ if __name__ == "__main__":
   print("horiz_shear: ",FLAGS.horiz_shear)
   print("vert_shear: ",FLAGS.vert_shear)
   print("gaussian_noise",FLAGS.gaussian_noise)
+  print("occlude",FLAGS.occlude)
   print("vert_flip",FLAGS.vert_flip)
   print("horiz_flip",FLAGS.horiz_flip)
   print("show: ",FLAGS.show)
@@ -594,6 +622,11 @@ if __name__ == "__main__":
     noisy_images = apply_gaussian_noise(images,FLAGS.gaussian_noise[0],
                                         FLAGS.gaussian_noise[1])
     transformed_list.extend(noisy_images)
+    print("Done!")
+  if FLAGS.occlude:
+    print("Applying occlusions with x_grid:%d, y_grid:%d"%(x_grid,y_grid))
+    occ_images = apply_occlusions(images,x_grid,y_grid,occlusion_selection)
+    transformed_list.extend(occ_images)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
 
