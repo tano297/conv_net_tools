@@ -56,6 +56,13 @@ def apply_rotations(images,n_rot,ccw_limit,cw_limit):
 
   Returns a list with all the rotated samples. Size will be n_rot+1, because
   we also want the original sample to be included
+
+  Example: images=[img],n_rot=4,ccw_limit=90,cw_limit=90
+  Returns: [img1: 90 degrees rot ccw,
+            img2: 45 degrees rot ccw,
+            img3: original,
+            img4: 45 degrees rot cw,
+            img5: 90 degrees rot cw]            ]
   """
   # if we only have 1 image, transform into a list to work with same script
   if type(images) is not list:
@@ -84,6 +91,50 @@ def apply_rotations(images,n_rot,ccw_limit,cw_limit):
 
   return rotated_images
 
+def apply_shear(images,n_shear,max_shear_x,max_shear_y,crop_center=True):
+  """
+  Applies a shear transform to every image in the list "images" n_shear times,
+  with the max shear passed in the max_shear_x and max_shear_y arguments. By 
+  default, we crop the center of the images so that all images have the same 
+  shape, but this can be changed with the arg crop_center set to False.
+
+  Returns a list with all the shear samples. Size will be n_shear+1, because
+  we also want the original sample to be included. 
+
+  Example: images=[img],n_shear=2, max_shear_x = 0.5, max_shear_y=0
+  Returns: [img1=img,
+           img2=img with shear of 0.25 in x,
+           img3=img with shear of 0.5 in x]
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # calculate the shear steps
+  x_step = float(max_shear_x) / float(n_shear) 
+  y_step = float(max_shear_x) / float(n_shear) 
+
+  # container for sheared images
+  sheared_images = []
+
+  #get every image and apply the number of desired shears
+  for img in images:
+    #get rows and cols to shear
+    rows,cols,depth = img.shape
+    #shear the amount of times we want them sheared
+    for i in xrange(0, n_shear+1):
+      #create shear matrix by mapping points
+      pts1 = np.float32([[0,0],[rows,0],[0,cols]])
+      pts2 = np.float32([[0,0],[rows+x_step*i,0],[0,cols+y_step*i]])
+      M = cv2.getAffineTransform(pts1,pts2)
+
+      #shear using the matrix (and bicubic interpolation)
+      shear_img = cv2.warpAffine(img,M,(cols,rows),flags=cv2.INTER_CUBIC)
+      #append to sheared images container
+      sheared_images.append(shear_img)
+
+  return sheared_images
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser("Apply augmentations to data. See source")
   parser.add_argument(
@@ -107,9 +158,17 @@ if __name__ == "__main__":
     nargs='*',
     type=float,
     help='List that contains [n_rots,ccw_limit,cw_limit]. Rotates data n_rots '+
-    'times, with ccw_limit as counterclockwise limit, and cw_limit as '
+    'times, with ccw_limit as counterclockwise limit, and cw_limit as '+
     'clockwise limit. Angles limited to 180 degrees, and n_rots to 36000'
-    'Defaults to \'%(default)s\''
+  )
+  parser.add_argument(
+    '--shear',
+    nargs='*',
+    type=float,
+    help='List that contains [n_shear,max_shear_x,max_shear_y]. '+
+    'Shears data n_shear times, with max_shear_x and max_shear_y as limits. '+
+    'The limits are defined as a portion of the original image to move in '+
+    'each direction -> {0;1}'
   )
   parser.add_argument(
     '--show',
@@ -165,6 +224,7 @@ if __name__ == "__main__":
   print("in_im: ",FLAGS.in_dir)
   print("out_dir: ",FLAGS.out_dir)
   print("rots: ",FLAGS.rots)
+  print("shear: ",FLAGS.shear)
   print("show: ",FLAGS.show)
   print("---------------------------------------------------------------------")
 
@@ -175,9 +235,6 @@ if __name__ == "__main__":
   else:
     images = [cv2.imread(join(FLAGS.in_img), cv2.IMREAD_UNCHANGED)]
 
-  print("len images: ", len(images))
-  print images
-
   # apply pertinent transformations
   transformed_list = []
 
@@ -187,9 +244,6 @@ if __name__ == "__main__":
         % (n_rots, ccw_limit, cw_limit))
     rot_list = apply_rotations(images,n_rots,ccw_limit,cw_limit)
     transformed_list.extend(rot_list)
-    print("rot list type",type(rot_list))
-    print("rot list length: ",len(rot_list))
-    print("tf list length: ",len(transformed_list))
     print("Done!")
   #if FLAGS.lalalala... Other transformations
 
