@@ -416,43 +416,6 @@ def gaussian_noise(images,mean,std):
     # noisy_img = img.copy()
     noisy_img = np.zeros((rows,cols,depth),dtype=np.uint8)
     noisy_img = cv2.randn(noisy_img,m,s)
-    shim.im_plt(noisy_img)
-    noisy_img = img + noisy_img
-
-    #append noisy image to container
-    noisy_images.append(noisy_img)
-
-  return noisy_images
-
-def gaussian_noise(images,mean,std):
-  """
-  Applies gaussian noise to every image in the list "images" with the desired
-
-  Returns a list with all the original and noisy images. 
-  """
-  # if we only have 1 image, transform into a list to work with same script
-  if type(images) is not list:
-    images = [images]
-
-  # container for sheared images
-  noisy_images = []
-
-  #get every image and apply the number of desired shears
-  for img in images:
-    #get rows and cols apply noise to
-    rows,cols,depth = img.shape
-    
-    # append original image 
-    noisy_images.append(img)
-
-    #fill in the per-channel mean and std
-    m = np.full((1, depth),mean)
-    s = np.full((1, depth),std)
-
-    # add noise to image
-    # noisy_img = img.copy()
-    noisy_img = np.zeros((rows,cols,depth),dtype=np.uint8)
-    noisy_img = cv2.randn(noisy_img,m,s)
     noisy_img = img + noisy_img
 
     #append noisy image to container
