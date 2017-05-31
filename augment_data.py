@@ -474,6 +474,24 @@ if __name__ == "__main__":
     'clockwise limit. Angles limited to 180 degrees, and n_rots to 36000'
   )
   parser.add_argument(
+    '--horiz_stretch',
+    nargs='*',
+    type=float,
+    help='List that contains [n_stretch,max_stretch]. '+
+    'Stretches data n_stretch times horizontally, with max_stretch as limit. '+
+    'The limit is defined as a scale of the original image {0.01;100} '+
+    '(max>1 is stretch, max<1 is compression).'
+  )
+  parser.add_argument(
+    '--vert_stretch',
+    nargs='*',
+    type=float,
+    help='List that contains [n_stretch,max_stretch]. '+
+    'Stretches data n_stretch times vertically, with max_stretch as limit. '+
+    'The limit is defined as a scale of the original image {0.01;100} '+
+    '(max>1 is stretch, max<1 is compression).'
+  )
+  parser.add_argument(
     '--horiz_shear',
     nargs='*',
     type=float,
