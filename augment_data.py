@@ -779,6 +779,18 @@ if __name__ == "__main__":
     rot_list = apply_rotations(images,n_rots,ccw_limit,cw_limit)
     transformed_list.extend(rot_list)
     print("Done!")
+  if n_horiz_stretch:
+    print("Stretching images horizontally %d times, with max_stretch:%.2f" 
+        % (n_horiz_stretch, max_horiz_stretch))
+    horiz_stretch_list = apply_horiz_stretch(images,n_horiz_stretch,max_horiz_stretch)
+    transformed_list.extend(horiz_stretch_list)
+    print("Done!")
+  if n_vert_stretch:
+    print("Stretching images vertically %d times, with max_stretch:%.2f" 
+        % (n_vert_stretch, max_vert_stretch))
+    vert_stretch_list = apply_vert_stretch(images,n_vert_stretch,max_vert_stretch)
+    transformed_list.extend(vert_stretch_list)
+    print("Done!")
   if n_horiz_shear:
     print("Shearing images horizontally %d times, with max_shear:%.2f" 
         % (n_horiz_shear, max_horiz_shear))
