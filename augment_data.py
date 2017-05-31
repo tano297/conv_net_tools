@@ -104,17 +104,17 @@ def apply_horiz_stretch(images,n_stretch,max_stretch,crop_center=True):
   Returns a list with all the stretch samples. Size will be n_stretch+1, because
   we also want the original sample to be included. 
 
-  Example: images=[img],n_stretch=2, max_stretch=0.5
+  Example: images=[img],n_stretch=2, max_stretch=1.5
   Returns: [img1=img,
-           img2=img with stretch of 0.25 in x,
-           img3=img with stretch of 0.5 in x]
+           img2=img with stretch of 1.25 in x,
+           img3=img with stretch of 1.5 in x]
   """
   # if we only have 1 image, transform into a list to work with same script
   if type(images) is not list:
     images = [images]
 
   # calculate the stretch steps
-  step_rel = max_stretch / float(n_stretch) #relative to image size
+  step_rel = (max_stretch - 1)/float(n_stretch)  #relative to image size
 
   # container for stretched images
   stretched_images = []
@@ -124,16 +124,85 @@ def apply_horiz_stretch(images,n_stretch,max_stretch,crop_center=True):
     #get rows and cols to stretch
     rows,cols,depth = img.shape
 
+    stretched_images.append(img)
+
     #stretch the amount of times we want
-    for i in xrange(0, n_stretch+1):
+    for i in xrange(1, n_stretch+1):
       #create stretch matrix by mapping points
-      new_size = int(step_rel*i*cols) #abs increase in size (or decrease if <1) 
+      new_size = int((step_rel*i+1)*cols) #abs increase in size (or decrease if <1) 
       
       #compress or stretch? (neg vs pos)
       pts1 = np.float32([[0,0],[cols,0],[cols,rows]])
       pts2 = np.float32([[0,0],[new_size,0],[new_size,rows]])
       M = cv2.getAffineTransform(pts1,pts2)
       stretch_img = cv2.warpAffine(img,M,(new_size,rows),flags=cv2.INTER_CUBIC)
+            
+      if crop_center:
+        #different if I stretch or compress.
+        if(max_stretch>=1):
+          #if stretch, then cut out center 
+          row_start = (stretch_img.shape[0]/2) - (rows/2)
+          col_start = (stretch_img.shape[1]/2) - (cols/2)
+          stretch_img = stretch_img[row_start:row_start+rows,col_start:col_start+cols]
+        else:
+          #if compress image will be smaller than original
+          #fill image with zeros and copy the compressed one in the center
+          fix_size_stretch_img = np.zeros(img.shape).astype(np.uint8)
+          row_start = (rows - stretch_img.shape[0])/2
+          col_start = (cols - stretch_img.shape[1])/2
+          fix_size_stretch_img[row_start:row_start+stretch_img.shape[0],
+                               col_start:col_start+stretch_img.shape[1]] = stretch_img
+          stretch_img = fix_size_stretch_img
+      #append to stretched images container
+      stretched_images.append(stretch_img)
+
+  return stretched_images
+
+def apply_vert_stretch(images,n_stretch,max_stretch,crop_center=True):
+  """
+  Applies a vertical stretch transform to every image in the list "images" 
+  n_stretch times, with the max stretch passed in the max_stretch argument. 
+
+  Stretch > 1 expands the image, and < 1 compresses the image.
+
+  By default, we crop the center of the images so that all images have the same 
+  shape, but this can be changed with the arg crop_center set to False. 
+
+  Returns a list with all the stretch samples. Size will be n_stretch+1, because
+  we also want the original sample to be included. 
+
+  Example: images=[img],n_stretch=2, max_stretch=1.5
+  Returns: [img1=img,
+           img2=img with stretch of 1.25 in y,
+           img3=img with stretch of 1.5 in y]
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # calculate the stretch steps
+  step_rel = (max_stretch - 1)/float(n_stretch)  #relative to image size
+
+  # container for stretched images
+  stretched_images = []
+
+  #get every image and apply the number of desired stretches
+  for img in images:
+    #get rows and cols to stretch
+    rows,cols,depth = img.shape
+
+    stretched_images.append(img)
+
+    #stretch the amount of times we want
+    for i in xrange(1, n_stretch+1):
+      #create stretch matrix by mapping points
+      new_size = int((step_rel*i+1)*rows) #abs increase in size (or decrease if <1) 
+      
+      #compress or stretch? (neg vs pos)
+      pts1 = np.float32([[0,0],[0,rows],[cols,rows]])
+      pts2 = np.float32([[0,0],[0,new_size],[cols,new_size]])
+      M = cv2.getAffineTransform(pts1,pts2)
+      stretch_img = cv2.warpAffine(img,M,(cols,new_size),flags=cv2.INTER_CUBIC)
             
       if crop_center:
         #different if I stretch or compress.
