@@ -46,7 +46,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def apply_rotations(images,n_rot,ccw_limit,cw_limit):
+def rotations(images,n_rot,ccw_limit,cw_limit):
   """
   Rotates every image in the list "images" n_rot times, between cw_limit 
   (clockwise limit) and ccw_limit (counterclockwise limit). The limits are 
@@ -91,7 +91,7 @@ def apply_rotations(images,n_rot,ccw_limit,cw_limit):
 
   return rotated_images
 
-def apply_horiz_stretch(images,n_stretch,max_stretch,crop_center=True):
+def horiz_stretch(images,n_stretch,max_stretch,crop_center=True):
   """
   Applies a horizontal stretch transform to every image in the list "images" 
   n_stretch times, with the max stretch passed in the max_stretch argument. 
@@ -158,7 +158,7 @@ def apply_horiz_stretch(images,n_stretch,max_stretch,crop_center=True):
 
   return stretched_images
 
-def apply_vert_stretch(images,n_stretch,max_stretch,crop_center=True):
+def vert_stretch(images,n_stretch,max_stretch,crop_center=True):
   """
   Applies a vertical stretch transform to every image in the list "images" 
   n_stretch times, with the max stretch passed in the max_stretch argument. 
@@ -225,7 +225,7 @@ def apply_vert_stretch(images,n_stretch,max_stretch,crop_center=True):
 
   return stretched_images
 
-def apply_horiz_shear(images,n_shear,max_shear,crop_center=True):
+def horiz_shear(images,n_shear,max_shear,crop_center=True):
   """
   Applies a horizontal shear transform to every image in the list "images" 
   n_shear times, with the max shear passed in the max_shear argument. By 
@@ -286,7 +286,7 @@ def apply_horiz_shear(images,n_shear,max_shear,crop_center=True):
 
   return sheared_images
 
-def apply_vert_shear(images,n_shear,max_shear,crop_center=True):
+def vert_shear(images,n_shear,max_shear,crop_center=True):
   """
   Applies a vertical shear transform to every image in the list "images" 
   n_shear times, with the max shear passed in the max_shear argument. By 
@@ -347,7 +347,7 @@ def apply_vert_shear(images,n_shear,max_shear,crop_center=True):
 
   return sheared_images
 
-def apply_horiz_flip(images):
+def horiz_flip(images):
   """
   Applies a horizontal flip to every image in the list "images" 
   Returns a list with all the original and flipped samples.
@@ -367,7 +367,7 @@ def apply_horiz_flip(images):
  
   return flipped_images
 
-def apply_vert_flip(images):
+def vert_flip(images):
   """
   Applies a vertical flip to every image in the list "images" 
   Returns a list with all the original and flipped samples. 
@@ -387,7 +387,7 @@ def apply_vert_flip(images):
 
   return flipped_images
 
-def apply_gaussian_noise(images,mean,std):
+def gaussian_noise(images,mean,std):
   """
   Applies gaussian noise to every image in the list "images" with the desired
 
@@ -424,7 +424,7 @@ def apply_gaussian_noise(images,mean,std):
 
   return noisy_images
 
-def apply_gaussian_noise(images,mean,std):
+def gaussian_noise(images,mean,std):
   """
   Applies gaussian noise to every image in the list "images" with the desired
 
@@ -460,7 +460,7 @@ def apply_gaussian_noise(images,mean,std):
 
   return noisy_images
 
-def apply_occlusions(images,grid_x,grid_y,selection):
+def occlusions(images,grid_x,grid_y,selection):
   """
   Applies a grid to each image and removes a block from selection (zeroing it).
   Returns a list with all the original and occluded images. 
@@ -776,53 +776,53 @@ if __name__ == "__main__":
   if n_rots:
     print("Rotating images %d times, with ccw_limit:%.2f, and cw_limit:%.2f"
         % (n_rots, ccw_limit, cw_limit))
-    rot_list = apply_rotations(images,n_rots,ccw_limit,cw_limit)
+    rot_list = rotations(images,n_rots,ccw_limit,cw_limit)
     transformed_list.extend(rot_list)
     print("Done!")
   if n_horiz_stretch:
     print("Stretching images horizontally %d times, with max_stretch:%.2f" 
         % (n_horiz_stretch, max_horiz_stretch))
-    horiz_stretch_list = apply_horiz_stretch(images,n_horiz_stretch,max_horiz_stretch)
+    horiz_stretch_list = horiz_stretch(images,n_horiz_stretch,max_horiz_stretch)
     transformed_list.extend(horiz_stretch_list)
     print("Done!")
   if n_vert_stretch:
     print("Stretching images vertically %d times, with max_stretch:%.2f" 
         % (n_vert_stretch, max_vert_stretch))
-    vert_stretch_list = apply_vert_stretch(images,n_vert_stretch,max_vert_stretch)
+    vert_stretch_list = vert_stretch(images,n_vert_stretch,max_vert_stretch)
     transformed_list.extend(vert_stretch_list)
     print("Done!")
   if n_horiz_shear:
     print("Shearing images horizontally %d times, with max_shear:%.2f" 
         % (n_horiz_shear, max_horiz_shear))
-    horiz_shear_list = apply_horiz_shear(images,n_horiz_shear,max_horiz_shear)
+    horiz_shear_list = horiz_shear(images,n_horiz_shear,max_horiz_shear)
     transformed_list.extend(horiz_shear_list)
     print("Done!")
   if n_vert_shear:
     print("Shearing images vertically %d times, with max_shear:%.2f" 
         % (n_vert_shear, max_vert_shear))
-    vert_shear_list = apply_vert_shear(images,n_vert_shear,max_vert_shear)
+    vert_shear_list = vert_shear(images,n_vert_shear,max_vert_shear)
     transformed_list.extend(vert_shear_list)
     print("Done!")
   if FLAGS.horiz_flip:
     print("Flipping images horizontally")
-    horiz_flip_list = apply_horiz_flip(images)
+    horiz_flip_list = horiz_flip(images)
     transformed_list.extend(horiz_flip_list)
     print("Done!")
   if FLAGS.vert_flip:
     print("Flipping images vertically")
-    vert_flip_list = apply_vert_flip(images)
+    vert_flip_list = vert_flip(images)
     transformed_list.extend(vert_flip_list)
     print("Done!")
   if FLAGS.gaussian_noise:
     print("Applying gaussian noise with mean:%.2f and std:%.2f"
           % (FLAGS.gaussian_noise[0],FLAGS.gaussian_noise[1]))
-    noisy_images = apply_gaussian_noise(images,FLAGS.gaussian_noise[0],
+    noisy_images = gaussian_noise(images,FLAGS.gaussian_noise[0],
                                         FLAGS.gaussian_noise[1])
     transformed_list.extend(noisy_images)
     print("Done!")
   if FLAGS.occlude:
     print("Applying occlusions with x_grid:%d, y_grid:%d"%(x_grid,y_grid))
-    occ_images = apply_occlusions(images,x_grid,y_grid,occlusion_selection)
+    occ_images = occlusions(images,x_grid,y_grid,occlusion_selection)
     transformed_list.extend(occ_images)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
