@@ -586,6 +586,39 @@ if __name__ == "__main__":
       print("Rotations off boundaries. Exiting")
       quit()
 
+  # horizontal and vertical stretch sanity check. Limiting to 100 stretches, 
+  # and limiting max and min stretch to 0.01 and 100, since at that point it's
+  # already mom's spaghetti and probably a mistake
+  if FLAGS.horiz_stretch and (len(FLAGS.horiz_stretch) != 2):
+    print("Wrong usage of horizontal stretch parameters. Check again. Exiting")
+    quit()
+
+  n_horiz_stretch = 0
+  if FLAGS.horiz_stretch:
+    n_horiz_stretch = int(FLAGS.horiz_stretch[0])
+    max_horiz_stretch = FLAGS.horiz_stretch[1]
+    if n_horiz_stretch > 100:
+      print("Too many horizontal stretches. Exiting")
+      quit()
+    if max_horiz_stretch > 100 or max_horiz_stretch < 0.01:
+      print("Horizontal stretch size off boundaries. Exiting")
+      quit()
+
+  if FLAGS.vert_stretch and (len(FLAGS.vert_stretch) != 2):
+    print("Wrong usage of vertical stretch parameters. Check again. Exiting")
+    quit()
+
+  n_vert_stretch = 0
+  if FLAGS.vert_stretch:
+    n_vert_stretch = int(FLAGS.vert_stretch[0])
+    max_vert_stretch = FLAGS.vert_stretch[1]
+    if n_vert_stretch > 100:
+      print("Too many vertical stretches. Exiting")
+      quit()
+    if max_vert_stretch > 100 or max_vert_stretch < 0.01:
+      print("Vertical stretch size off boundaries. Exiting")
+      quit()
+
   # horizontal and vertical shearing sanity check. Limiting to 100 shears, 
   # and 10 times the image size in maximum shear. More than this is probably a 
   # mistake (image looks like mom's spaghetti)
