@@ -497,7 +497,7 @@ if __name__ == "__main__":
     type=float,
     help='List that contains [n_shear,max_shear]. '+
     'Shears data n_shear times horizontally, with max_shear as limit. '+
-    'The limit is defined as a portion of the original image to move -> {0;1}'
+    'The limit is defined as a portion of the original image to move -> {0;10}'
   )
   parser.add_argument(
     '--vert_shear',
@@ -505,7 +505,7 @@ if __name__ == "__main__":
     type=float,
     help='List that contains [n_shear,max_shear]. '+
     'Shears data n_shear times vertically, with max_shear as limit. '+
-    'The limit is defined as a portion of the original image to move -> {0;1}'
+    'The limit is defined as a portion of the original image to move -> {0;10}'
   )
   parser.add_argument(
     '--gaussian_noise',
