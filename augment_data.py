@@ -69,14 +69,14 @@ def extract_patch(img,corner1,corner2,resize=False,shape=None):
   we resize the patch to the size of the original image (useful for CNN)
 
   Returns the extracted patch, if everything is correct, otherwise it returns
-  the original image
+  None, for error checking
   """
   #sanity checks
   if (type(corner1) is not list or len(corner1) != 2 or
       type(corner2) is not list or len(corner2) != 2 or 
       (shape and (type(shape) is not list or len(shape) != 2))):
     print("Wrong usage of the corner parameters")
-    return img
+    return None
 
   #get rows and cols of original image
   rows,cols,depth = img.shape
@@ -113,6 +113,61 @@ def extract_patch(img,corner1,corner2,resize=False,shape=None):
     patch = cv2.resize(patch,(cols,rows),interpolation=cv2.INTER_CUBIC)
 
   return patch
+
+def extract_patch_n(images,indexes,shape):
+  """
+  Extracts patches from the images with the indicated shape [x,y], from the 
+  indexes asked in the indexes list, where:
+  indexes:
+    1: top left
+    2: top right
+    3: center
+    4: bottom left
+    5: bottom right
+
+  It returns a list with the original image and all the patches, unless
+  something is wrong, in which case we return None for error checking
+  """
+  # if we only have 1 image, transform into a list to work with same script
+  if type(images) is not list:
+    images = [images]
+
+  # if we only have 1 index, transform into a list to work with same script
+  if type(indexes) is not list:
+    indexes = [indexes]
+
+  if not all((idx > 0 and idx < 6) for idx in indexes):
+    print("Wrong usage of indexes -> Off boundaries")
+    return None
+
+  if type(shape) is not list or len(shape) != 2:
+    print("Wrong usage of shape parameter")
+    return None
+
+  # container for patches
+  patches = []
+
+  #extract desired patches from each image
+  for img in images:
+    #get rows and cols to rotate
+    rows,cols,depth = img.shape
+    
+    #append original at the beginning
+    patches.append(img)
+
+    #extract one patch per index
+    for idx in indexes:
+      patch = {
+        1: lambda x: extract_patch(x,[0,0],[None,None],shape=shape),
+        2: lambda x: extract_patch(x,[cols-shape[0],0],[None,None],shape=shape),
+        3: lambda x: extract_patch(x,[cols/2-shape[0]/2,rows/2-shape[1]/2],[cols/2+shape[0]/2,rows/2+shape[1]/2]),
+        4: lambda x: extract_patch(x,[0,rows-shape[1]],[None,None],shape=shape),
+        5: lambda x: extract_patch(x,[cols-shape[0],rows-shape[1]],[None,None],shape=shape)
+      }[idx](img)
+
+      patches.append(patch)
+
+  return patches
 
 def rotations(images,n_rot,ccw_limit,cw_limit):
   """
