@@ -26,6 +26,10 @@ General comment for all functions:
   structure. Randomize before feeding this to the training, even if the dataset
   has been shuffled before, since all the transformed images will be highly
   correlated with each other, and they will be of the same class!
+
+  Unless otherwise noted, the above structure is used in all functions, where
+  the original image is returned and the transformations requested are appended
+  after it.  
 """
 
 import argparse
@@ -47,6 +51,8 @@ import matplotlib.pyplot as plt
 
 def extract_patch(img,corner1,corner2,resize=False,shape=None):
   """
+  SINGLE IMAGE FUNCTION - Takes one image, returns one image, not list!
+
   Extracts patch from image img starting in corner1 and finishing in corner2,
   where both corners are given as a list of [x,y] coordinates in the original
   image. x and y start in the upper left corner of the image (opencv images)
