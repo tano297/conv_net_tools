@@ -45,6 +45,59 @@ import cv2
 #matplotlib to plot samples from main
 import matplotlib.pyplot as plt
 
+def extract_patch_x_y(img,corner1,corner2,resize=False):
+  """
+  Extracts patch from image img starting in corner1 and finishing in corner2,
+  where both corners are given as a list of [x,y] coordinates in the original
+  image. x and y start in the upper left corner of the image (opencv images)
+
+  If any of the coordinates are off boundaries, the patch extracted will be 
+  cropped to the boundaries of the image. The boundaries can be expressed in
+  any order, the function takes care of the rearrangement necessary for the 
+  crop.
+
+  By default we return the patch, but if the flag resize is set to True,
+  we resize the patch to the size of the original image (useful for CNN)
+
+  Returns the extracted patch, if everything is correct, otherwise it returns
+  the original image
+  """
+  if (type(corner1) is not list or len(corner1) != 2 or
+      type(corner2) is not list or len(corner2) != 2):
+    print("Wrong usage of the corner parameters")
+    return img
+
+  #get rows and cols of original image
+  rows,cols,depth = img.shape
+
+  # copy the corners internally to work with them
+  pt1 = corner1[:]
+  pt2 = corner2[:]
+
+  #limits
+  minim_pt = [0,0]
+  maxim_pt = [cols,rows] 
+
+  # clip the values to the min (0,0) and max (rows,cols)
+  for pt in [pt1,pt2]:
+    for i in [0,1]:
+      pt[i] = minim_pt[i] if pt[i]<minim_pt[i] else pt[i]
+      pt[i] = maxim_pt[i] if pt[i]>maxim_pt[i] else pt[i]
+
+  #swap points if improperly arranged for cropping 
+  if pt2[0]<pt1[0]:
+    pt2,pt1=pt1,pt2
+  if pt2[1]<pt1[1]:
+    pt2[1],pt1[1]=pt1[1],pt2[1]
+
+  #now crop
+  patch = img[pt1[1]:pt2[1]+1,pt1[0]:pt2[0]+1]
+
+  #resize?
+  if resize:
+    patch = cv2.resize(patch,(cols,rows),interpolation=cv2.INTER_CUBIC)
+
+  return patch
 
 def rotations(images,n_rot,ccw_limit,cw_limit):
   """
