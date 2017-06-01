@@ -45,11 +45,14 @@ import cv2
 #matplotlib to plot samples from main
 import matplotlib.pyplot as plt
 
-def extract_patch_x_y(img,corner1,corner2,resize=False):
+def extract_patch(img,corner1,corner2,resize=False,shape=None):
   """
   Extracts patch from image img starting in corner1 and finishing in corner2,
   where both corners are given as a list of [x,y] coordinates in the original
   image. x and y start in the upper left corner of the image (opencv images)
+
+  If shape is given, then ignore the second corner and use the first corner and
+  the shape to extract the patch
 
   If any of the coordinates are off boundaries, the patch extracted will be 
   cropped to the boundaries of the image. The boundaries can be expressed in
@@ -62,8 +65,10 @@ def extract_patch_x_y(img,corner1,corner2,resize=False):
   Returns the extracted patch, if everything is correct, otherwise it returns
   the original image
   """
+  #sanity checks
   if (type(corner1) is not list or len(corner1) != 2 or
-      type(corner2) is not list or len(corner2) != 2):
+      type(corner2) is not list or len(corner2) != 2 or 
+      (shape and (type(shape) is not list or len(shape) != 2))):
     print("Wrong usage of the corner parameters")
     return img
 
@@ -73,6 +78,10 @@ def extract_patch_x_y(img,corner1,corner2,resize=False):
   # copy the corners internally to work with them
   pt1 = corner1[:]
   pt2 = corner2[:]
+
+  #if shape is given, use instead of second corner
+  if shape:
+    pt2 = [pt1[0]+shape[0],pt1[1]+shape[1]]
 
   #limits
   minim_pt = [0,0]
