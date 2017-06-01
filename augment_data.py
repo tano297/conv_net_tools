@@ -621,6 +621,14 @@ if __name__ == "__main__":
     help='Path of augmented output dataset. Defaults to \'%(default)s\''
   )
   parser.add_argument(
+    '--patches',
+    nargs='*',
+    type=float,
+    help='List that contains [size_x,size_y] of the patches. Returns 5 image '+
+    'patches of the desired size: top left, top right, center, bottom left, '+
+    ' btm right'
+  )
+  parser.add_argument(
     '--rots',
     nargs='*',
     type=float,
@@ -720,6 +728,15 @@ if __name__ == "__main__":
   if FLAGS.in_img and (not os.path.exists(FLAGS.in_img)):
     print("Input image needs to exist, Einstein :) Exiting")
     quit()
+
+  # patches sanity check. Length particularly
+  if FLAGS.patches and (len(FLAGS.patches) != 2):
+    print("Wrong usage of patches parameter. Check again. Exiting")
+    quit()
+
+  if FLAGS.patches:
+    shape_patches = [int(size) for size in FLAGS.patches]
+
 
   # rotations sanity check: limit angles to 180 and n_rots to 36000)
   # this is chosen somewhat randomly, I cannot imagine somebody willingly
@@ -837,6 +854,7 @@ if __name__ == "__main__":
   print("in_dir: ",FLAGS.in_dir)
   print("in_im: ",FLAGS.in_dir)
   print("out_dir: ",FLAGS.out_dir)
+  print("patches",FLAGS.patches)
   print("rots: ",FLAGS.rots)
   print("horiz_shear: ",FLAGS.horiz_shear)
   print("vert_shear: ",FLAGS.vert_shear)
@@ -858,6 +876,11 @@ if __name__ == "__main__":
   transformed_list = []
 
   #rots
+  if FLAGS.patches:
+    print("Extracting 5 patches from images")
+    patches = extract_patch_n(images,[1,2,3,4,5],shape_patches)
+    transformed_list.extend(patches)
+    print("Done!")
   if n_rots:
     print("Rotating images %d times, with ccw_limit:%.2f, and cw_limit:%.2f"
         % (n_rots, ccw_limit, cw_limit))
