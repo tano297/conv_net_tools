@@ -171,29 +171,33 @@ def extract_patch_n(images,indexes,shape):
 
 def rotations(images,n_rot,ccw_limit,cw_limit):
   """
-  Rotates every image in the list "images" n_rot times, between cw_limit 
-  (clockwise limit) and ccw_limit (counterclockwise limit). The limits are 
-  there to make sense of the data augmentation. E.g: Rotating an mnist digit
-  180 degrees turns a 6 into a 9, which makes no sense at all.
+  Rotates every image in the list "images" n_rot times, between 0 and cw_limit 
+  (clockwise limit) n_rot times and between 0 and ccw_limit (counterclockwise 
+  limit) n_rot times more. The limits are there to make sense of the data 
+  augmentation. E.g: Rotating an mnist digit 180 degrees turns a 6 into a 9, 
+  which makes no sense at all.
+  
   cw_limit and ccw_limit are in degrees!
 
-  Returns a list with all the rotated samples. Size will be n_rot+1, because
+  Returns a list with all the rotated samples. Size will be 2*n_rot+1, because
   we also want the original sample to be included
 
-  Example: images=[img],n_rot=4,ccw_limit=90,cw_limit=90
-  Returns: [img1: 90 degrees rot ccw,
-            img2: 45 degrees rot ccw,
-            img3: original,
-            img4: 45 degrees rot cw,
-            img5: 90 degrees rot cw]            ]
+  Example: images=[img],n_rot=3,ccw_limit=90,cw_limit=90
+  Returns: [img1: original,
+            img2: 90 degrees rot ccw,
+            img3: 60 degrees rot ccw,
+            img4: 30 degrees rot ccw,
+            img5: 30 degrees rot cw,
+            img5: 60 degrees rot cw
+            img5: 90 degrees rot cw]
   """
   # if we only have 1 image, transform into a list to work with same script
   if type(images) is not list:
     images = [images]
 
   # calculate the initial angle and the step
-  initial_angle = float(ccw_limit)
-  step_angle = (float(cw_limit) + float(ccw_limit)) / float(n_rot)
+  cw_step_angle = float(cw_limit)/ float(n_rot)
+  ccw_step_angle = float(ccw_limit)/ float(n_rot)
 
   # container for rotated images
   rotated_images = []
@@ -202,13 +206,24 @@ def rotations(images,n_rot,ccw_limit,cw_limit):
   for img in images:
     #get rows and cols to rotate
     rows,cols,depth = img.shape
+    
+    #append the original one too
+    rotated_images.append(img)
+    
     #rotate the amount of times we want them rotated
-    for i in xrange(0, n_rot+1):
+    for i in xrange(1, n_rot+1):
       #create rotation matrix with center in the center of the image,
-      #scale 1, and the desired angle (we travel clockwise, from ccwlimit)
-      M = cv2.getRotationMatrix2D((cols/2,rows/2),initial_angle-i*step_angle,1)
+      #scale 1, and the desired angle (we travel counter clockwise first, and
+      #then clockwise
+      M_ccw = cv2.getRotationMatrix2D((cols/2,rows/2),i*ccw_step_angle,1)
       #rotate using the matrix (using bicubic interpolation)
-      rot_img = cv2.warpAffine(img,M,(cols,rows),flags=cv2.INTER_CUBIC)
+      rot_img = cv2.warpAffine(img,M_ccw,(cols,rows),flags=cv2.INTER_CUBIC)
+      #append to rotated images container
+      rotated_images.append(rot_img)
+
+      M_cw = cv2.getRotationMatrix2D((cols/2,rows/2),-i*cw_step_angle,1)
+      #rotate using the matrix (using bicubic interpolation)
+      rot_img = cv2.warpAffine(img,M_cw,(cols,rows),flags=cv2.INTER_CUBIC)
       #append to rotated images container
       rotated_images.append(rot_img)
 
