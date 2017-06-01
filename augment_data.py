@@ -932,14 +932,16 @@ if __name__ == "__main__":
     shim.im_block()
 
   #save results to disk
+  print("---------------------------------------------------------------------")
   print("Saving transformed files")
   #create dir
   if os.path.exists(FLAGS.out_dir):
-    print("Output directory \'%s'\ already exists. Removing..."%FLAGS.out_dir)
+    print("Output directory \'%s\' already exists. Removing..."%FLAGS.out_dir)
     sh_rmtree(FLAGS.out_dir)
     if os.path.exists(FLAGS.out_dir):
       print("Couldn't remove dir... Exiting")
       exit()
+  print("Creating dir \'%s\'... "%FLAGS.out_dir)
   os.makedirs(FLAGS.out_dir)
   if not os.path.exists(FLAGS.out_dir):
     print("Couldn't create dir... Exiting")
