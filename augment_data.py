@@ -852,7 +852,7 @@ if __name__ == "__main__":
   # parameter show.   
   print("----------------------------Parameters-------------------------------")
   print("in_dir: ",FLAGS.in_dir)
-  print("in_im: ",FLAGS.in_dir)
+  print("in_im: ",FLAGS.in_img)
   print("out_dir: ",FLAGS.out_dir)
   print("patches",FLAGS.patches)
   print("rots: ",FLAGS.rots)
@@ -873,69 +873,57 @@ if __name__ == "__main__":
     images = [cv2.imread(join(FLAGS.in_img), cv2.IMREAD_UNCHANGED)]
 
   # apply pertinent transformations
-  transformed_list = []
+  transformed_list = images[:]
 
   #rots
   if FLAGS.patches:
     print("Extracting 5 patches from images")
-    patches = extract_patch_n(images,[1,2,3,4,5],shape_patches)
-    transformed_list.extend(patches)
-    print("Done!")
-  if n_rots:
-    print("Rotating images %d times, with ccw_limit:%.2f, and cw_limit:%.2f"
-        % (n_rots, ccw_limit, cw_limit))
-    rot_list = rotations(images,n_rots,ccw_limit,cw_limit)
-    transformed_list.extend(rot_list)
-    print("Done!")
-  if n_horiz_stretch:
-    print("Stretching images horizontally %d times, with max_stretch:%.2f" 
-        % (n_horiz_stretch, max_horiz_stretch))
-    horiz_stretch_list = horiz_stretch(images,n_horiz_stretch,max_horiz_stretch)
-    transformed_list.extend(horiz_stretch_list)
-    print("Done!")
-  if n_vert_stretch:
-    print("Stretching images vertically %d times, with max_stretch:%.2f" 
-        % (n_vert_stretch, max_vert_stretch))
-    vert_stretch_list = vert_stretch(images,n_vert_stretch,max_vert_stretch)
-    transformed_list.extend(vert_stretch_list)
-    print("Done!")
-  if n_horiz_shear:
-    print("Shearing images horizontally %d times, with max_shear:%.2f" 
-        % (n_horiz_shear, max_horiz_shear))
-    horiz_shear_list = horiz_shear(images,n_horiz_shear,max_horiz_shear)
-    transformed_list.extend(horiz_shear_list)
-    print("Done!")
-  if n_vert_shear:
-    print("Shearing images vertically %d times, with max_shear:%.2f" 
-        % (n_vert_shear, max_vert_shear))
-    vert_shear_list = vert_shear(images,n_vert_shear,max_vert_shear)
-    transformed_list.extend(vert_shear_list)
+    transformed_list = extract_patch_n(transformed_list,[1,2,3,4,5],shape_patches)
     print("Done!")
   if FLAGS.horiz_flip:
     print("Flipping images horizontally")
-    horiz_flip_list = horiz_flip(images)
-    transformed_list.extend(horiz_flip_list)
+    transformed_list = horiz_flip(transformed_list)
     print("Done!")
   if FLAGS.vert_flip:
     print("Flipping images vertically")
-    vert_flip_list = vert_flip(images)
-    transformed_list.extend(vert_flip_list)
+    transformed_list = vert_flip(transformed_list)
     print("Done!")
   if FLAGS.gaussian_noise:
     print("Applying gaussian noise with mean:%.2f and std:%.2f"
           % (FLAGS.gaussian_noise[0],FLAGS.gaussian_noise[1]))
-    noisy_images = gaussian_noise(images,FLAGS.gaussian_noise[0],
+    transformed_list = gaussian_noise(transformed_list,FLAGS.gaussian_noise[0],
                                         FLAGS.gaussian_noise[1])
-    transformed_list.extend(noisy_images)
     print("Done!")
   if FLAGS.occlude:
     print("Applying occlusions with x_grid:%d, y_grid:%d"%(x_grid,y_grid))
-    occ_images = occlusions(images,x_grid,y_grid,occlusion_selection)
-    transformed_list.extend(occ_images)
+    transformed_list = occlusions(transformed_list,x_grid,y_grid,occlusion_selection)
+    print("Done!")
+  if n_rots:
+    print("Rotating images %d times, with ccw_limit:%.2f, and cw_limit:%.2f"
+        % (n_rots, ccw_limit, cw_limit))
+    transformed_list = rotations(transformed_list,n_rots,ccw_limit,cw_limit)
+    print("Done!")
+  if n_horiz_stretch:
+    print("Stretching images horizontally %d times, with max_stretch:%.2f" 
+        % (n_horiz_stretch, max_horiz_stretch))
+    transformed_list = horiz_stretch(transformed_list,n_horiz_stretch,max_horiz_stretch)
+    print("Done!")
+  if n_vert_stretch:
+    print("Stretching images vertically %d times, with max_stretch:%.2f" 
+        % (n_vert_stretch, max_vert_stretch))
+    transformed_list = vert_stretch(transformed_list,n_vert_stretch,max_vert_stretch)
+    print("Done!")
+  if n_horiz_shear:
+    print("Shearing images horizontally %d times, with max_shear:%.2f" 
+        % (n_horiz_shear, max_horiz_shear))
+    transformed_list = horiz_shear(transformed_list,n_horiz_shear,max_horiz_shear)
+    print("Done!")
+  if n_vert_shear:
+    print("Shearing images vertically %d times, with max_shear:%.2f" 
+        % (n_vert_shear, max_vert_shear))
+    transformed_list = vert_shear(transformed_list,n_vert_shear,max_vert_shear)
     print("Done!")
   #if FLAGS.lalalala... Other transformations
-
-  # @TODO: Save to disk in out_dir!!!!!!!!!!!!!!!
 
   # if asked, show the results
   if FLAGS.show:
@@ -943,4 +931,36 @@ if __name__ == "__main__":
       shim.im_plt(img)
     shim.im_block()
 
+  #save results to disk
+  print("Saving transformed files")
+  #create dir
+  if os.path.exists(FLAGS.out_dir):
+    print("Output directory \'%s'\ already exists. Removing..."%FLAGS.out_dir)
+    sh_rmtree(FLAGS.out_dir)
+    if os.path.exists(FLAGS.out_dir):
+      print("Couldn't remove dir... Exiting")
+      exit()
+  os.makedirs(FLAGS.out_dir)
+  if not os.path.exists(FLAGS.out_dir):
+    print("Couldn't create dir... Exiting")
+    exit()
 
+  #save files with proper names (keep the original name and append an index)
+  total_trans = int((len(transformed_list)-len(images))/float(len(images)))
+  print("Number of original images: %d"%len(images))
+  print("Number of images now: %d"%len(transformed_list))
+  print("Total number of transformations per image: %d "%total_trans)
+  for i in xrange(0,len(transformed_list)):
+    #get filename corresponding to original image
+    filename = files[i/(total_trans+1)]
+
+    #split in name + extension
+    filename,extension = os.path.splitext(filename)
+
+    #join again but with suffix per augmentation
+    filename = filename+"_"+str(i%(total_trans+1))+extension
+    
+    #save
+    # print("saving file %s"%filename)
+    cv2.imwrite(join(FLAGS.out_dir,filename),transformed_list[i])
+  print("Done saving files")
