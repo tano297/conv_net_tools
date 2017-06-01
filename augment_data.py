@@ -859,7 +859,7 @@ if __name__ == "__main__":
       x_grid=FLAGS.occlude[0]
       y_grid=FLAGS.occlude[1]
 
-    if not all((i>0 and i<x_grid*y_grid) for i in FLAGS.occlude[2:]):
+    if not all((i>=0 and i<x_grid*y_grid) for i in FLAGS.occlude[2:]):
       print("Wrong usage of occlusion selection. Off boundaries! Exiting")
       quit()
     occlusion_selection = FLAGS.occlude[2:]
