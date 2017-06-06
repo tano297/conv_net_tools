@@ -49,6 +49,34 @@ import cv2
 #matplotlib to plot samples from main
 import matplotlib.pyplot as plt
 
+def resize(img,new_size):
+  """
+  SINGLE IMAGE FUNCTION - Takes one image, returns one image, not list!
+  returns the resized img to size new size, where new_size=(rows,cols)
+  """
+  #get rows and cols of original image
+  rows,cols,depth = img.shape
+
+  #get rows and cols of new image
+  new_rows = new_size[0]
+  new_cols = new_size[1]
+
+  #resizing should be done differently if we upsize or downsize, due to interpol
+  if new_rows > rows:
+    interpol=cv2.INTER_CUBIC
+  else:
+    interpol=cv2.INTER_LINEAR
+  resized_img = cv2.resize(img,(cols,new_rows),interpolation=interpol)
+
+  if new_cols > cols:
+    interpol=cv2.INTER_CUBIC
+  else:
+    interpol=cv2.INTER_LINEAR
+  resized_img = cv2.resize(resized_img,(new_cols,new_rows),interpolation=interpol)
+
+  return resized_img
+
+
 def extract_patch(img,corner1,corner2,resize=False,shape=None):
   """
   SINGLE IMAGE FUNCTION - Takes one image, returns one image, not list!
